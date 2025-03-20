@@ -5,8 +5,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { Toaster } from "@/shared/ui/sonner";
 import { toast } from "sonner";
@@ -34,22 +32,11 @@ export default function WelcomePage() {
             🚀 Welcome to Our Platform!
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-gray-600 text-center">
-            이 플랫폼에 오신 것을 환영합니다. 회원가입 후 다양한 기능을 경험해보세요!
+        <CardContent className="space-y-4 text-center">
+          <p className="text-gray-600">
+            이 플랫폼에 오신 것을 환영합니다. 지금 바로 시작해보세요!
           </p>
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-gray-700">이름</Label>
-            <Input id="name" type="text" placeholder="이름을 입력하세요" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-gray-700">이메일</Label>
-            <Input id="email" type="email" placeholder="이메일을 입력하세요" />
-          </div>
-          <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={handleStartClick}
-          >
+          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={handleStartClick}>
             시작하기
           </Button>
           <Dialog>
@@ -60,7 +47,7 @@ export default function WelcomePage() {
               <DialogTitle>우리 플랫폼 소개</DialogTitle>
               <p>
                 이 플랫폼은 사용자가 빠르게 서비스를 경험할 수 있도록 설계되었습니다.
-                지금 바로 가입하고 다양한 기능을 확인해보세요! 🚀
+                지금 바로 시작해보세요! 🚀
               </p>
             </DialogContent>
           </Dialog>
