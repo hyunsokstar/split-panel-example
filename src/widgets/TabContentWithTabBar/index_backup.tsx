@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTabBarStore, type PanelState, Tab } from '@/shared/model/tab-admin/store';
 import {
     DndContext,
@@ -18,7 +18,6 @@ import {
 import {
     sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
-import { Resizable } from 're-resizable';
 import { TabBarWithDndKit } from './ui/TabBarWithDndKit';
 
 // 올바른 방식으로 드롭 애니메이션 구성
@@ -35,19 +34,6 @@ const dropAnimation = {
     }
 };
 
-// 초기 패널 크기 (로컬 스토리지에 저장됨)
-const getPanelSizes = () => {
-    if (typeof window === 'undefined') return {};
-
-    try {
-        const saved = localStorage.getItem('panel-sizes');
-        return saved ? JSON.parse(saved) : {};
-    } catch (e) {
-        console.error('Failed to parse panel sizes:', e);
-        return {};
-    }
-};
-
 export function TabContentWithTabBar() {
     const {
         panels,
@@ -59,29 +45,6 @@ export function TabContentWithTabBar() {
 
     const [activeTab, setActiveDragTab] = useState<Tab | null>(null);
     const [activePanel, setActivePanel] = useState<string | null>(null);
-    const [panelSizes, setPanelSizes] = useState<Record<string, { width?: string | number, height?: string | number }>>({});
-    const [hoveredPanel, setHoveredPanel] = useState<string | null>(null);
-
-    // 로컬 스토리지에서 패널 크기 로드
-    useEffect(() => {
-        setPanelSizes(getPanelSizes());
-    }, []);
-
-    // 패널 크기 변경 시 로컬 스토리지에 저장
-    const handleResizeStop = (panelId: string, size: { width: number, height: number }) => {
-        const newSizes = {
-            ...panelSizes,
-            [panelId]: size
-        };
-
-        setPanelSizes(newSizes);
-
-        try {
-            localStorage.setItem('panel-sizes', JSON.stringify(newSizes));
-        } catch (e) {
-            console.error('Failed to save panel sizes:', e);
-        }
-    };
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -215,75 +178,17 @@ export function TabContentWithTabBar() {
             {!isSplitScreen ? (
                 renderPanel(panels[0])
             ) : (
-                <div className="overflow-x-auto h-full">
-                    <div className="flex h-full" style={{ minWidth: 'fit-content' }}>
-                        {panels.map((panel, index) => {
-                            // 마지막 패널은 resize 핸들이 필요 없음
-                            const isLastPanel = index === panels.length - 1;
-                            const panelSize = panelSizes[panel.id] || {};
-                            const isPanelHovered = hoveredPanel === panel.id;
-
-                            return (
-                                <Resizable
-                                    key={panel.id}
-                                    size={{
-                                        width: panelSize.width || `${100 / screenCount}%`,
-                                        height: panelSize.height || '100%',
-                                    }}
-                                    minWidth="200px"
-                                    maxWidth="3000px" // 충분히 큰 값 설정
-                                    enable={{
-                                        top: false,
-                                        right: !isLastPanel,
-                                        bottom: false,
-                                        left: false,
-                                        topRight: false,
-                                        bottomRight: false,
-                                        bottomLeft: false,
-                                        topLeft: false,
-                                    }}
-                                    onResizeStop={(e, direction, ref, d) => {
-                                        handleResizeStop(panel.id, {
-                                            width: ref.offsetWidth,
-                                            height: ref.offsetHeight
-                                        });
-                                    }}
-                                    // className="transition-all duration-150"
-                                    handleClasses={{
-                                        right: `w-1 absolute top-0 bottom-0 right-0 transition-opacity duration-200 ${isPanelHovered ? 'opacity-100' : 'opacity-0'
-                                            }`
-                                    }}
-                                    handleStyles={{
-                                        right: {
-                                            width: '8px',
-                                            right: '-4px',
-                                            backgroundColor: isPanelHovered ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
-                                            cursor: 'col-resize',
-                                            zIndex: 10
-                                        }
-                                    }}
-                                >
-                                    <div
-                                        className="bg-white rounded-lg h-full p-1 relative"
-                                        id={panel.id}
-                                        data-panel-id={panel.id}
-                                        onMouseEnter={() => setHoveredPanel(panel.id)}
-                                        onMouseLeave={() => setHoveredPanel(null)}
-                                    >
-                                        {renderPanel(panel)}
-
-                                        {/* 리사이징 핸들 호버 상태 시각화를 위한 요소 */}
-                                        {!isLastPanel && (
-                                            <div
-                                                className={`absolute top-0 bottom-0 right-0 w-1 z-10 transition-opacity duration-200 ${isPanelHovered ? 'opacity-100 bg-blue-300' : 'opacity-0'
-                                                    }`}
-                                            />
-                                        )}
-                                    </div>
-                                </Resizable>
-                            );
-                        })}
-                    </div>
+                <div className={`grid ${getGridClass()} gap-2 p-2 h-full`}>
+                    {panels.map(panel => (
+                        <div
+                            key={panel.id}
+                            className="bg-white rounded-lg"
+                            id={panel.id}
+                            data-panel-id={panel.id}
+                        >
+                            {renderPanel(panel)}
+                        </div>
+                    ))}
                 </div>
             )}
 
