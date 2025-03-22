@@ -1,19 +1,112 @@
 'use client';
 
-import React from 'react';
-import { X, Minus } from 'lucide-react';
-import { Button } from '@/shared/ui/button';
-import { useTabBarStore } from '@/shared/model/tab-admin/store';
+import React, { useState } from 'react';
+import { useTabBarStore, type PanelState, Tab } from '@/shared/model/tab-admin/store';
+import {
+    DndContext,
+    DragOverlay,
+    DragStartEvent,
+    DragEndEvent,
+    DragOverEvent,
+    useSensor,
+    useSensors,
+    PointerSensor,
+    KeyboardSensor,
+    closestCenter,
+    DropAnimation,
+    defaultDropAnimation,
+} from '@dnd-kit/core';
+import {
+    sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { TabBarWithDndKit } from './ui/TabBarWithDndKit';
 
-const TabContentWithTabBar = () => {
+const dropAnimation: DropAnimation = {
+    ...defaultDropAnimation,
+    dragSourceOpacity: 0.5,
+};
+
+export function TabContentWithTabBar() {
     const {
         panels,
         screenCount,
         isSplitScreen,
-        setActiveTab,
-        removeTab,
+        moveTab,
         updateSplitScreenCount
     } = useTabBarStore();
+
+    const [activeTab, setActiveDragTab] = useState<Tab | null>(null);
+    const [activePanel, setActivePanel] = useState<string | null>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragStart = (event: DragStartEvent) => {
+        const { active } = event;
+        const { tab, panelId } = active.data.current || {};
+
+        if (tab && panelId) {
+            console.log('Drag started:', { tab, panelId });
+            setActiveDragTab(tab);
+            setActivePanel(panelId);
+        }
+    };
+
+    const handleDragOver = (event: DragOverEvent) => {
+        // 필요한 경우 여기에 드래그 오버 로직 추가
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (!over || !active.data.current) {
+            setActiveDragTab(null);
+            setActivePanel(null);
+            return;
+        }
+
+        console.log('Drag ended:', {
+            activeId: active.id,
+            activeData: active.data.current,
+            overId: over.id,
+            overData: over.data.current
+        });
+
+        const sourceTabId = active.id as string;
+        const sourcePanelId = active.data.current.panelId;
+
+        // 드롭 영역에서 패널 ID 추출
+        let targetPanelId = sourcePanelId;
+
+        if (over.data.current?.panelId) {
+            targetPanelId = over.data.current.panelId;
+            console.log(`Moving tab to panel: ${targetPanelId} (from data)`);
+        } else if (over.data.current?.type === 'panel-area') {
+            // droppable-panel-1 형식에서 panel-1 추출
+            const match = (over.id as string).match(/droppable-(.+)/);
+            if (match && match[1]) {
+                targetPanelId = match[1];
+                console.log(`Moving tab to panel: ${targetPanelId} (from id)`);
+            }
+        }
+
+        // 패널 간 이동이 있을 경우만 처리
+        if (sourcePanelId !== targetPanelId) {
+            console.log(`Moving tab ${sourceTabId} from ${sourcePanelId} to ${targetPanelId}`);
+            moveTab(sourceTabId, sourcePanelId, targetPanelId);
+        }
+
+        setActiveDragTab(null);
+        setActivePanel(null);
+    };
 
     const getGridClass = () => {
         const gridClasses = {
@@ -31,71 +124,20 @@ const TabContentWithTabBar = () => {
         updateSplitScreenCount((newScreenCount > 0 ? newScreenCount : 1) as 1 | 2 | 3 | 4 | 5);
     };
 
-    const renderPanel = (panel: { id: string, tabs: any[], activeTabId: string | null }) => {
+    const renderPanel = (panel: PanelState) => {
         const ActiveTabContent = panel.activeTabId
             ? panel.tabs.find(tab => tab.id === panel.activeTabId)?.component
             : null;
 
         return (
             <div className="flex flex-col h-full border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                <div className="h-10 flex items-center bg-gray-50 border-b border-gray-200 px-1 justify-between">
-                    <div className="flex flex-1 overflow-x-auto space-x-1">
-                        {panel.tabs.map((tab) => (
-                            <div
-                                key={tab.id}
-                                className={`
-                                    flex items-center 
-                                    px-3 py-1.5 h-8 
-                                    border border-gray-300
-                                    ${panel.activeTabId === tab.id
-                                        ? 'bg-blue-100 text-blue-700 border-blue-200'
-                                        : 'bg-white text-gray-600 hover:bg-gray-50'
-                                    }
-                                    rounded-md cursor-pointer 
-                                    flex items-center justify-between
-                                    min-w-[120px] transition-all duration-200
-                                `}
-                                onClick={() => setActiveTab(tab.id, panel.id)}
-                            >
-                                <span className="text-xs font-medium truncate flex-1 mr-2">
-                                    {tab.label}
-                                </span>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="
-                                        w-4 h-4 
-                                        text-gray-400 hover:text-red-500 
-                                        ml-auto
-                                    "
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        removeTab(tab.id, panel.id);
-                                    }}
-                                >
-                                    <X size={12} />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                    {screenCount > 1 && (
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="
-                                text-gray-400 hover:text-red-500 
-                                w-6 h-6 
-                                border border-dashed border-gray-300 
-                                rounded-md ml-2
-                            "
-                            onClick={() => handleRemovePanel(panel.id)}
-                        >
-                            <Minus size={14} />
-                        </Button>
-                    )}
-                </div>
+                <TabBarWithDndKit
+                    panel={panel}
+                    onRemovePanel={() => handleRemovePanel(panel.id)}
+                    showRemoveButton={screenCount > 1}
+                />
 
-                <div className="flex-1 overflow-auto p-4">
+                <div className="flex-1 overflow-auto p-4" data-panel-id={panel.id}>
                     {ActiveTabContent ? <ActiveTabContent /> : (
                         <div className="h-full flex items-center justify-center text-gray-400">
                             <p>콘텐츠를 선택해주세요</p>
@@ -118,7 +160,13 @@ const TabContentWithTabBar = () => {
     }
 
     return (
-        <>
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+        >
             {!isSplitScreen ? (
                 renderPanel(panels[0])
             ) : (
@@ -127,14 +175,26 @@ const TabContentWithTabBar = () => {
                         <div
                             key={panel.id}
                             className="bg-white rounded-lg"
+                            id={panel.id}
+                            data-panel-id={panel.id}
                         >
                             {renderPanel(panel)}
                         </div>
                     ))}
                 </div>
             )}
-        </>
+
+            <DragOverlay dropAnimation={dropAnimation}>
+                {activeTab ? (
+                    <div className="flex items-center px-3 py-1.5 h-8 border border-blue-400 bg-blue-50 rounded-md min-w-[120px] shadow-lg">
+                        <span className="text-xs font-medium truncate flex-1">
+                            {activeTab.label}
+                        </span>
+                    </div>
+                ) : null}
+            </DragOverlay>
+        </DndContext>
     );
-};
+}
 
 export default TabContentWithTabBar;

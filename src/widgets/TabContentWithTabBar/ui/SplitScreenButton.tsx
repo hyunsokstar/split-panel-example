@@ -1,49 +1,50 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
-import { Button } from '@/shared/ui/button';
-import { useTabBarStore } from '@/shared/model/tab-admin/store';
+import React from 'react';
+import { LayoutGrid, ChevronDown } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu';
+import { useTabBarStore, type screenCountType } from '@/shared/model/tab-admin/store';
 
-export const SplitScreenButton = () => {
-    const { screenCount, updateSplitScreenCount } = useTabBarStore();
-    const [isOpen, setIsOpen] = useState(false);
+export function SplitScreenButton() {
+    const { updateSplitScreenCount, screenCount } = useTabBarStore();
 
-    const handleLayoutChange = (newScreenCount: 1 | 2 | 3 | 4 | 5) => {
-        updateSplitScreenCount(newScreenCount);
-        setIsOpen(false);
+    const handleSplitChange = (count: screenCountType) => {
+        updateSplitScreenCount(count);
     };
 
     return (
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-gray-600 hover:text-teal-500"
-                    title="화면 분할"
-                >
-                    <span className="text-xs font-semibold">{screenCount}</span>
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent
-                side="bottom"
-                align="end"
-                className="flex gap-2 p-2 w-auto"
-            >
-                {([1, 2, 3, 4, 5] as const).map((screenCountOption) => (
-                    <Button
-                        key={screenCountOption}
-                        variant={screenCount === screenCountOption ? 'default' : 'outline'}
-                        size="icon"
-                        onClick={() => handleLayoutChange(screenCountOption)}
-                        className="hover:bg-gray-100 text-sm font-medium w-8 h-8 flex items-center justify-center"
-                        title={`${screenCountOption}분할 화면`}
-                    >
-                        {screenCountOption}
-                    </Button>
-                ))}
-            </PopoverContent>
-        </Popover>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button className="flex h-5 items-center space-x-1 rounded-sm border border-white/30 px-1.5 text-xs text-white hover:bg-white/10">
+                    <LayoutGrid size={12} />
+                    <span>{screenCount}</span>
+                    <ChevronDown size={10} />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+                <DropdownMenuItem onClick={() => handleSplitChange(1)}>
+                    <span className="mr-2">●</span> 1 화면
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSplitChange(2)}>
+                    <span className="mr-2">●●</span> 2 화면
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSplitChange(3)}>
+                    <span className="mr-2">●●●</span> 3 화면
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSplitChange(4)}>
+                    <span className="mr-2">●●●●</span> 4 화면
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSplitChange(5)}>
+                    <span className="mr-2">●●●●●</span> 5 화면
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
-};
+}
+
+export default SplitScreenButton;
