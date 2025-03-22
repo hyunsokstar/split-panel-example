@@ -13,7 +13,6 @@ import {
     PointerSensor,
     KeyboardSensor,
     closestCenter,
-    DropAnimation,
     defaultDropAnimation,
 } from '@dnd-kit/core';
 import {
@@ -21,9 +20,18 @@ import {
 } from '@dnd-kit/sortable';
 import { TabBarWithDndKit } from './ui/TabBarWithDndKit';
 
-const dropAnimation: DropAnimation = {
+// 올바른 방식으로 드롭 애니메이션 구성
+const dropAnimation = {
     ...defaultDropAnimation,
-    dragSourceOpacity: 0.5,
+    // sideEffects는 함수여야 합니다
+    sideEffects: ({ active }: { active: { node: HTMLElement } }) => {
+        active.node.style.opacity = '0.5';
+
+        // 클린업 함수 반환
+        return () => {
+            active.node.style.opacity = '';
+        };
+    }
 };
 
 export function TabContentWithTabBar() {
