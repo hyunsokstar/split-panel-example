@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/widgets/header";
-import TabBar from "@/widgets/tabbar";
-import TabContentArea from "@/widgets/tab-content-area";
+import TabContentWithTabBar from "@/widgets/TabContentWithTabBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,9 +31,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col`}
       >
         <Header />
-        <TabBar />
         <main className="flex-1 overflow-hidden bg-gray-50">
-          <TabContentArea />
+          <TabContentWithTabBar />
         </main>
         {/* children은 숨김 처리 또는 제거 가능 */}
         <div className="hidden">{children}</div>

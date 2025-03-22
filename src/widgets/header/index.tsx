@@ -1,22 +1,23 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { Settings } from 'lucide-react'
+import Link from 'next/link';
+import { Settings } from 'lucide-react';
 import { MainMenuItems } from './config/main-header-menu-items';
-import { useTabBarStore } from '@/shared/model/tab-bar/store';
+import { SplitScreenButton } from '../TabContentWithTabBar/ui/SplitScreenButton';
+import { useTabBarStore } from '@/shared/model/tab-admin/store';
 
 export function Header() {
     const { addTab } = useTabBarStore();
 
     const handleMenuClick = (item: typeof MainMenuItems[0]) => {
-        // 메뉴 클릭 시 탭 추가
         addTab({
             id: item.id,
             label: item.name,
-            path: `/${item.id.toLowerCase()}`, // 적절한 경로로 변경하세요
+            path: `/${item.id.toLowerCase()}`,
             closable: true,
+            component: item.component,
+            panelId: 'panel-1' // 기본 패널에 추가
         });
-
     };
 
     return (
@@ -31,9 +32,15 @@ export function Header() {
                         <div className="flex items-center text-white">
                             <span className="text-xs">홍길동(관리자)</span>
                         </div>
-                        <Link href="#" className="flex h-5 w-5 items-center justify-center rounded-sm border border-white/30 text-white hover:bg-white/10">
-                            <Settings size={12} />
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <SplitScreenButton />
+                            <Link
+                                href="#"
+                                className="flex h-5 w-5 items-center justify-center rounded-sm border border-white/30 text-white hover:bg-white/10"
+                            >
+                                <Settings size={12} />
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -64,11 +71,10 @@ export function Header() {
                             );
                         })}
                     </div>
-
                 </div>
             </div>
         </>
     )
 }
 
-export default Header
+export default Header;
