@@ -1,0 +1,26 @@
+/* File: /shared/ContextMenu/context-menu-speedup.css */
+
+/* 애니메이션 속도 가속을 위한 CSS 오버라이드 */
+.contexify_willEnter-fade {
+    animation-duration: 0.05s !important;
+}
+
+.contexify_willLeave-fade {
+    animation-duration: 0.05s !important;
+}
+
+/* 다른 애니메이션도 빠르게 하고 싶다면 추가 가능 */
+.contexify_willEnter-scale,
+.contexify_willLeave-scale {
+    animation-duration: 0.05s !important;
+}
+
+/* 기본 메뉴 스타일을 조금 더 컴팩트하게 */
+.contexify {
+    padding: 2px 0 !important;
+    min-width: 180px !important;
+}
+
+.contexify_itemContent {
+    padding: 5px 8px !important;
+}

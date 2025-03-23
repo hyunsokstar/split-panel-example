@@ -36,7 +36,7 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
         ? panel.tabs.find((tab) => tab.id === panel.activeTabId)?.component
         : null;
 
-    // 1분할일 때는 100% 너비 사용
+    // 1분할일 때는 100% 너비 사용, window.innerWidth 대신 100% 사용
     const isSinglePanel = screenCount === 1;
 
     // panel이 없으면 빈 컨테이너 반환
@@ -50,14 +50,13 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
                 width: isSinglePanel ? "100%" : (panelSize.width || "600px"),
                 height: panelSize.height || "100%",
             }}
-            minWidth={isSinglePanel ? window.innerWidth : 200}
-            maxWidth={3000}
+            minWidth={isSinglePanel ? "100%" : 200} // window.innerWidth 대신 100% 사용
+            maxWidth={isSinglePanel ? "100%" : 3000} // 단일 패널일 때 최대 너비도 100%로 제한
             enable={{
                 top: false,
                 bottom: false,
                 left: false,
-                // 모든 패널이 리사이즈 가능하도록 수정 (마지막 패널 포함)
-                right: !isSinglePanel,
+                right: !isSinglePanel, // 단일 패널일 때는 리사이즈 비활성화
                 topLeft: false,
                 topRight: false,
                 bottomLeft: false,
@@ -81,6 +80,7 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
                     zIndex: 10,
                 },
             }}
+            className={isSinglePanel ? "overflow-hidden" : ""} // 단일 패널일 때 overflow 제한
         >
             <div
                 className="bg-white rounded-lg h-full p-1 relative"

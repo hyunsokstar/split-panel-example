@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/widgets/header";
 import TabContentWithTabBar from "@/widgets/TabContentWithTabBar";
+import Sidebar from "@/widgets/sidebar";
+import Footer from "@/widgets/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,13 +32,21 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col`}
       >
         <Header />
-        {/*
-          main을 w-full h-full, overflow-auto로 설정
-          => 전체 화면 폭을 차지하고, 내용이 넘치면 스크롤
-        */}
-        <main className="flex-1 w-full h-full overflow-auto bg-gray-50">
-          <TabContentWithTabBar />
-        </main>
+        <div className="flex flex-1 overflow-hidden">
+          {/* 사이드바 */}
+          <Sidebar />
+
+          {/* 메인 콘텐츠 영역과 푸터를 포함하는 컨테이너 */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* 메인 콘텐츠 영역 - 푸터 공간을 제외한 영역 */}
+            <div className="flex-1 overflow-hidden bg-gray-50">
+              <TabContentWithTabBar />
+            </div>
+
+            {/* 푸터 영역 - 메인 콘텐츠 아래에 배치 */}
+            <Footer />
+          </div>
+        </div>
 
         {/* children은 숨김 처리 또는 제거 가능 */}
         <div className="hidden">{children}</div>

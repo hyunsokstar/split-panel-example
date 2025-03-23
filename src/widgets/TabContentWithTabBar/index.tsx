@@ -225,18 +225,21 @@ export function TabContentWithTabBar() {
             onDragEnd={handleDragEnd}
         >
             {!isSplitScreen ? (
-                <SortablePanel
-                    panel={panels[0]}
-                    panelSize={panelSizes[panels[0].id] || {}}
-                    screenCount={screenCount}
-                    isLastPanel={true}
-                    isPanelHovered={hoveredPanel === panels[0].id}
-                    handleResizeStop={handleResizeStop}
-                    setHoveredPanel={setHoveredPanel}
-                    onRemovePanel={() => handleRemovePanel(panels[0].id)}
-                />
+                // 단일 패널일 때는 컨테이너 추가, overflow-hidden으로 스크롤 방지
+                <div className="w-full h-full overflow-hidden">
+                    <SortablePanel
+                        panel={panels[0]}
+                        panelSize={{ width: '100%', height: '100%' }}
+                        screenCount={screenCount}
+                        isLastPanel={true}
+                        isPanelHovered={hoveredPanel === panels[0].id}
+                        handleResizeStop={handleResizeStop}
+                        setHoveredPanel={setHoveredPanel}
+                        onRemovePanel={() => handleRemovePanel(panels[0].id)}
+                    />
+                </div>
             ) : (
-                <div className="w-full h-full">
+                <div className="w-full h-full overflow-auto">
                     <SortableContext
                         items={panels.map(panel => panel.id)}
                     >
