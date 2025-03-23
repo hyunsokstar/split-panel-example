@@ -19,7 +19,6 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import IPanelForTabBarAndTabContentWithResize from './ui/IPanelForTabBarAndTabContentWithResize';
 import { TabBarWithDndKit } from './ui/TabBarWithDndKit';
 
-// 드롭 애니메이션
 const dropAnimation = {
     ...defaultDropAnimation,
     sideEffects: ({ active }: { active: { node: HTMLElement } }) => {
@@ -40,19 +39,11 @@ export function TabContentWithTabBar() {
         removePanel,
     } = useTabBarStore();
 
-    // 드래그 중인 탭/패널
     const [activeTab, setActiveDragTab] = useState<Tab | null>(null);
     const [activePanel, setActivePanel] = useState<string | null>(null);
-
-    // 패널별 사이즈 상태 (새로고침 시 유지 X, 화면 분할 변경 시 초기화)
-    const [panelSizes, setPanelSizes] = useState<
-        Record<string, { width?: string | number; height?: string | number }>
-    >({});
-
-    // 호버 중인 패널 ID (리사이즈 핸들 표시)
+    const [panelSizes, setPanelSizes] = useState<Record<string, { width?: string | number; height?: string | number }>>({});
     const [hoveredPanel, setHoveredPanel] = useState<string | null>(null);
 
-    // 분할 개수가 바뀌면 기존 사이즈 초기화 -> 항상 새로 시작
     useEffect(() => {
         setPanelSizes({});
     }, [screenCount]);
@@ -103,18 +94,15 @@ export function TabContentWithTabBar() {
         setActivePanel(null);
     };
 
-    // 패널 제거
     const handleRemovePanel = (panelId: string) => {
         removePanel(panelId);
     };
 
-    // 리사이즈 완료 시, 해당 패널 사이즈 저장
     const handleResizeStop = (panelId: string, size: { width: number; height: number }) => {
         const newSizes = { ...panelSizes, [panelId]: size };
         setPanelSizes(newSizes);
     };
 
-    // 패널 UI (탭바 + 콘텐츠)
     const renderPanel = (panel: PanelState) => {
         const ActiveTabContent = panel.activeTabId
             ? panel.tabs.find((tab) => tab.id === panel.activeTabId)?.component
@@ -140,7 +128,6 @@ export function TabContentWithTabBar() {
         );
     };
 
-    // 패널이 없을 때
     if (panels.length === 0) {
         return (
             <div className="h-full flex items-center justify-center text-gray-400">
@@ -160,21 +147,16 @@ export function TabContentWithTabBar() {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            {/* 분할 화면이 아니면 패널 1개 */}
             {!isSplitScreen ? (
                 renderPanel(panels[0])
             ) : (
-                // 분할 화면
                 <div className="w-full h-full">
                     <div className="flex w-full h-full">
                         {panels.map((panel, index) => {
                             const isLastPanel = index === panels.length - 1;
-
-                            // 저장된 사이즈(없으면 기본값 => IPanelForTabBarAndTabContentWithResize에서 "600px")
                             const savedSize = panelSizes[panel.id] || {};
-                            const width = savedSize.width;   // undefined 시 자식에서 "600px"
+                            const width = savedSize.width;
                             const height = savedSize.height || '100%';
-
                             return (
                                 <IPanelForTabBarAndTabContentWithResize
                                     key={panel.id}
