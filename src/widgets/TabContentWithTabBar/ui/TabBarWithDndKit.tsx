@@ -46,7 +46,7 @@ export function TabBarWithDndKit({
     onRemovePanel,
     showRemoveButton = false
 }: TabBarWithDndKitProps) {
-    const { removeTab, setActiveTab, screenCount } = useTabBarStore();
+    const { removeTab, setActiveTab } = useTabBarStore();
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const [showLeftScroll, setShowLeftScroll] = useState(false);
     const [showRightScroll, setShowRightScroll] = useState(false);
@@ -96,7 +96,7 @@ export function TabBarWithDndKit({
 
     return (
         <div
-            className={`h-10 flex items-center bg-gray-50 border-b border-gray-200 px-1 justify-between ${screenCount === 1 ? 'w-full' : ''}`}
+            className="h-10 flex items-center bg-gray-50 border-b border-gray-200 px-1 justify-between"
             data-panel-id={panel.id}
         >
             {/* Left scroll button - always visible */}
@@ -132,7 +132,7 @@ export function TabBarWithDndKit({
 
                         {/* 빈 패널에도 드롭 가능하도록 빈 영역 추가 */}
                         {panel.tabs.length === 0 && (
-                            <div className="flex-1 h-8 border border-dashed border-gray-300 rounded-md bg-gray-50 flex items-center justify-center">
+                            <div className="w-full h-8 flex items-center justify-center">
                                 <span className="text-xs text-gray-400">탭을 여기로 드래그하세요</span>
                             </div>
                         )}
