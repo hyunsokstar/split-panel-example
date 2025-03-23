@@ -16,10 +16,6 @@ interface IPanelForTabBarAndTabContentWithResizeProps {
     onRemovePanel: () => void;
 }
 
-/**
- * 리사이즈 래퍼 및 내부 패널 콘텐츠 렌더링
- * 기본 폭이 panelSize.width가 없으면 "600px"을 사용하며, 내부에서 TabBar와 콘텐츠 영역을 렌더링합니다.
- */
 const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabContentWithResizeProps> = ({
     panel,
     panelSize,
@@ -34,20 +30,23 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
         ? panel.tabs.find((tab) => tab.id === panel.activeTabId)?.component
         : null;
 
+    // 1분할일 때는 100% 너비 사용
+    const isSinglePanel = screenCount === 1;
+
     return (
         <Resizable
             size={{
-                width: panelSize.width || "600px",
+                width: isSinglePanel ? "100%" : (panelSize.width || "600px"),
                 height: panelSize.height || "100%",
             }}
-            minWidth={200}
+            minWidth={isSinglePanel ? window.innerWidth : 200}
             maxWidth={3000}
             enable={{
                 top: false,
                 bottom: false,
                 left: false,
-                // 제일 오른쪽 패널도 리사이즈 가능하도록 right: true 로 설정
-                right: true,
+                // 1분할일 때는 리사이즈 비활성화
+                right: !isSinglePanel,
                 topLeft: false,
                 topRight: false,
                 bottomLeft: false,
@@ -60,7 +59,7 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
                 });
             }}
             handleClasses={{
-                right: `w-1 absolute top-0 bottom-0 right-0 transition-opacity duration-200 ${isPanelHovered ? 'opacity-100' : 'opacity-0'
+                right: `w-1 absolute top-0 bottom-0 right-0 transition-opacity duration-200 ${isPanelHovered && !isSinglePanel ? 'opacity-100' : 'opacity-0'
                     }`,
             }}
             handleStyles={{
