@@ -4,6 +4,7 @@ import React from 'react';
 import { Resizable } from 're-resizable';
 import { PanelState } from '@/shared/model/tab-admin/store';
 import { TabBarWithDndKit } from './TabBarWithDndKit';
+import { GripVertical } from 'lucide-react';
 
 interface IPanelForTabBarAndTabContentWithResizeProps {
     panel: PanelState;
@@ -14,6 +15,8 @@ interface IPanelForTabBarAndTabContentWithResizeProps {
     handleResizeStop: (panelId: string, size: { width: number; height: number }) => void;
     setHoveredPanel: (panelId: string | null) => void;
     onRemovePanel: () => void;
+    dragHandleListeners?: any;
+    dragHandleAttributes?: any;
 }
 
 const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabContentWithResizeProps> = ({
@@ -25,6 +28,8 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
     handleResizeStop,
     setHoveredPanel,
     onRemovePanel,
+    dragHandleListeners,
+    dragHandleAttributes,
 }) => {
     const ActiveTabContent = panel.activeTabId
         ? panel.tabs.find((tab) => tab.id === panel.activeTabId)?.component
@@ -46,7 +51,7 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
                 bottom: false,
                 left: false,
                 // 1분할일 때는 리사이즈 비활성화
-                right: !isSinglePanel,
+                right: !isSinglePanel && !isLastPanel,
                 topLeft: false,
                 topRight: false,
                 bottomLeft: false,
@@ -59,7 +64,7 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
                 });
             }}
             handleClasses={{
-                right: `w-1 absolute top-0 bottom-0 right-0 transition-opacity duration-200 ${isPanelHovered && !isSinglePanel ? 'opacity-100' : 'opacity-0'
+                right: `w-1 absolute top-0 bottom-0 right-0 transition-opacity duration-200 ${isPanelHovered && !isSinglePanel && !isLastPanel ? 'opacity-100' : 'opacity-0'
                     }`,
             }}
             handleStyles={{
@@ -80,11 +85,27 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
             >
                 {/* 내부 패널 콘텐츠 */}
                 <div className="flex flex-col h-full border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                    <TabBarWithDndKit
-                        panel={panel}
-                        onRemovePanel={onRemovePanel}
-                        showRemoveButton={screenCount > 1}
-                    />
+                    <div className="flex h-10 bg-gray-50 border-b border-gray-200">
+                        {/* Drag Handle for Panel Reordering */}
+                        {screenCount > 1 && (
+                            <div
+                                className="flex items-center justify-center w-8 cursor-grab hover:bg-gray-200 active:cursor-grabbing"
+                                {...dragHandleListeners}
+                                {...dragHandleAttributes}
+                            >
+                                <GripVertical size={16} className="text-gray-500" />
+                            </div>
+                        )}
+
+                        {/* Tab Bar */}
+                        <div className="flex-1">
+                            <TabBarWithDndKit
+                                panel={panel}
+                                onRemovePanel={onRemovePanel}
+                                showRemoveButton={screenCount > 1}
+                            />
+                        </div>
+                    </div>
                     <div className="flex-1 overflow-auto p-4" data-panel-id={panel.id}>
                         {ActiveTabContent ? (
                             <ActiveTabContent />

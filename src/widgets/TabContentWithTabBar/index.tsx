@@ -1,3 +1,4 @@
+// C:\Users\terec\boiler-plate\boiler-for-rdd\src\widgets\TabContentWithTabBar\index.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -15,8 +16,12 @@ import {
     closestCenter,
     defaultDropAnimation,
 } from '@dnd-kit/core';
-import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import IPanelForTabBarAndTabContentWithResize from './ui/IPanelForTabBarAndTabContentWithResize';
+import {
+    SortableContext,
+    sortableKeyboardCoordinates,
+    arrayMove,
+} from '@dnd-kit/sortable';
+import SortablePanel from './ui/sortablepanel';
 
 const dropAnimation = {
     ...defaultDropAnimation,
@@ -34,14 +39,16 @@ export function TabContentWithTabBar() {
         screenCount,
         isSplitScreen,
         moveTab,
+        reorderPanels,
         updateSplitScreenCount,
         removePanel,
     } = useTabBarStore();
 
     const [activeTab, setActiveDragTab] = useState<Tab | null>(null);
-    const [activePanel, setActivePanel] = useState<string | null>(null);
+    const [activePanel, setActivePanel] = useState<PanelState | null>(null);
     const [panelSizes, setPanelSizes] = useState<Record<string, { width?: string | number; height?: string | number }>>({});
     const [hoveredPanel, setHoveredPanel] = useState<string | null>(null);
+    const [activeId, setActiveId] = useState<string | null>(null);
 
     // 화면 분할 개수가 바뀌면 기존 사이즈 초기화 (항상 균등 분할)
     useEffect(() => {
@@ -55,10 +62,19 @@ export function TabContentWithTabBar() {
 
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;
-        const { tab, panelId } = active.data.current || {};
-        if (tab && panelId) {
+        setActiveId(active.id as string);
+
+        // Handle tab dragging
+        const { tab, panelId, type } = active.data.current || {};
+
+        if (type === 'panel') {
+            const draggedPanel = panels.find(p => p.id === active.id);
+            if (draggedPanel) {
+                setActivePanel(draggedPanel);
+            }
+        } else if (tab && panelId) {
             setActiveDragTab(tab);
-            setActivePanel(panelId);
+            setActivePanel(null);
         }
     };
 
@@ -68,14 +84,30 @@ export function TabContentWithTabBar() {
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        if (!over || !active.data.current) {
-            setActiveDragTab(null);
-            setActivePanel(null);
+
+        // Reset active states
+        setActiveId(null);
+        setActiveDragTab(null);
+        setActivePanel(null);
+
+        if (!over || !active.data.current) return;
+
+        const activeData = active.data.current;
+
+        // Handle panel reordering
+        if (activeData.type === 'panel' && over.data.current?.type === 'panel') {
+            const activeId = active.id as string;
+            const overId = over.id as string;
+
+            if (activeId !== overId) {
+                reorderPanels(activeId, overId);
+            }
             return;
         }
 
+        // Handle tab movement
         const sourceTabId = active.id as string;
-        const sourcePanelId = active.data.current.panelId;
+        const sourcePanelId = activeData.panelId;
         let targetPanelId = sourcePanelId;
 
         if (over.data.current?.panelId) {
@@ -90,8 +122,6 @@ export function TabContentWithTabBar() {
         if (sourcePanelId !== targetPanelId) {
             moveTab(sourceTabId, sourcePanelId, targetPanelId);
         }
-        setActiveDragTab(null);
-        setActivePanel(null);
     };
 
     const handleRemovePanel = (panelId: string) => {
@@ -123,7 +153,7 @@ export function TabContentWithTabBar() {
             onDragEnd={handleDragEnd}
         >
             {!isSplitScreen ? (
-                <IPanelForTabBarAndTabContentWithResize
+                <SortablePanel
                     panel={panels[0]}
                     panelSize={panelSizes[panels[0].id] || {}}
                     screenCount={screenCount}
@@ -135,27 +165,32 @@ export function TabContentWithTabBar() {
                 />
             ) : (
                 <div className="w-full h-full">
-                    <div className="flex w-full h-full">
-                        {panels.map((panel, index) => {
-                            const isLastPanel = index === panels.length - 1;
-                            const savedSize = panelSizes[panel.id] || {};
-                            const width = savedSize.width;
-                            const height = savedSize.height || '100%';
-                            return (
-                                <IPanelForTabBarAndTabContentWithResize
-                                    key={panel.id}
-                                    panel={panel}
-                                    panelSize={{ width, height }}
-                                    screenCount={screenCount}
-                                    isLastPanel={isLastPanel}
-                                    isPanelHovered={hoveredPanel === panel.id}
-                                    handleResizeStop={handleResizeStop}
-                                    setHoveredPanel={setHoveredPanel}
-                                    onRemovePanel={() => handleRemovePanel(panel.id)}
-                                />
-                            );
-                        })}
-                    </div>
+                    <SortableContext
+                        items={panels.map(panel => panel.id)}
+                    >
+                        <div className="flex w-full h-full">
+                            {panels.map((panel, index) => {
+                                const isLastPanel = index === panels.length - 1;
+                                const savedSize = panelSizes[panel.id] || {};
+                                const width = savedSize.width;
+                                const height = savedSize.height || '100%';
+
+                                return (
+                                    <SortablePanel
+                                        key={panel.id}
+                                        panel={panel}
+                                        panelSize={{ width, height }}
+                                        screenCount={screenCount}
+                                        isLastPanel={isLastPanel}
+                                        isPanelHovered={hoveredPanel === panel.id}
+                                        handleResizeStop={handleResizeStop}
+                                        setHoveredPanel={setHoveredPanel}
+                                        onRemovePanel={() => handleRemovePanel(panel.id)}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </SortableContext>
                 </div>
             )}
 
@@ -163,6 +198,13 @@ export function TabContentWithTabBar() {
                 {activeTab && (
                     <div className="flex items-center px-3 py-1.5 h-8 border border-blue-400 bg-blue-50 rounded-md min-w-[120px] shadow-lg">
                         <span className="text-xs font-medium truncate flex-1">{activeTab.label}</span>
+                    </div>
+                )}
+                {activePanel && (
+                    <div className="border-2 border-blue-400 bg-blue-50/20 rounded-md shadow-lg h-full w-[300px]">
+                        <div className="h-10 bg-blue-100 border-b border-blue-300 flex items-center px-3">
+                            <span className="text-sm font-medium">패널 이동 중...</span>
+                        </div>
                     </div>
                 )}
             </DragOverlay>

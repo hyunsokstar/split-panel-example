@@ -39,6 +39,9 @@ type TabBarState = {
 
     // 패널 자체 제거 액션
     removePanel: (panelId: string) => void;
+
+    // 패널 순서 변경 액션
+    reorderPanels: (activeId: string, overId: string) => void;
 };
 
 export const useTabBarStore = create<TabBarState>()(
@@ -262,6 +265,28 @@ export const useTabBarStore = create<TabBarState>()(
                     };
                 });
             },
+
+            // 패널 순서 변경 액션
+            // src/shared/model/tab-admin/store.ts
+
+            reorderPanels: (activeId, overId) => {
+                set((state) => {
+                    const oldIndex = state.panels.findIndex(p => p.id === activeId);
+                    const newIndex = state.panels.findIndex(p => p.id === overId);
+
+                    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
+                        return state;
+                    }
+
+                    const newPanels = [...state.panels];
+                    const [removedPanel] = newPanels.splice(oldIndex, 1);
+                    newPanels.splice(newIndex, 0, removedPanel);
+
+                    // ID 재할당하지 않고 순서만 업데이트
+                    return { ...state, panels: newPanels };
+                });
+            },
+
         }),
         {
             name: 'tabbar-storage',

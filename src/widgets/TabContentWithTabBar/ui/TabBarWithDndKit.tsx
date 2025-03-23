@@ -95,11 +95,8 @@ export function TabBarWithDndKit({
     };
 
     return (
-        <div
-            className="h-10 flex items-center bg-gray-50 border-b border-gray-200 px-1 justify-between"
-            data-panel-id={panel.id}
-        >
-            {/* Left scroll button - always visible */}
+        <div className="flex items-center bg-gray-50 border-b border-gray-200 px-1 justify-between h-full">
+            {/* Left scroll button */}
             <Button
                 variant="outline"
                 size="icon"
@@ -140,7 +137,7 @@ export function TabBarWithDndKit({
                 </PanelDropArea>
             </SortableContext>
 
-            {/* Right scroll button - always visible */}
+            {/* Right scroll button */}
             <Button
                 variant="outline"
                 size="icon"
@@ -151,15 +148,17 @@ export function TabBarWithDndKit({
                 <ChevronRight size={14} />
             </Button>
 
-            {/* Close button - always visible and enabled */}
-            <Button
-                variant="ghost"
-                size="icon"
-                className="text-gray-400 hover:text-red-500 w-6 h-6 border border-dashed border-gray-300 rounded-md ml-2"
-                onClick={onRemovePanel}
-            >
-                <Minus size={14} />
-            </Button>
+            {/* Close button - conditionally rendered */}
+            {showRemoveButton && (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-400 hover:text-red-500 w-6 h-6 border border-dashed border-gray-300 rounded-md ml-2"
+                    onClick={onRemovePanel}
+                >
+                    <Minus size={14} />
+                </Button>
+            )}
         </div>
     );
 }
