@@ -17,6 +17,7 @@ interface MovingTabProps {
 export const MovingTab = ({ tab, panelId, isActive }: MovingTabProps) => {
     const { setActiveTab, removeTab } = useTabBarStore();
 
+    // useSortable 훅 사용
     const {
         attributes,
         listeners,
@@ -73,7 +74,7 @@ export const MovingTab = ({ tab, panelId, isActive }: MovingTabProps) => {
             <span className="text-xs font-medium truncate flex-1 mr-2">
                 {tab.label}
             </span>
-            {tab.closable && (
+            {tab.closable !== false && (
                 <Button
                     variant="ghost"
                     size="icon"
@@ -86,3 +87,5 @@ export const MovingTab = ({ tab, panelId, isActive }: MovingTabProps) => {
         </div>
     );
 };
+
+export default MovingTab;

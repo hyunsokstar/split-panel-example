@@ -5,7 +5,6 @@ import { Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { useTabBarStore, type PanelState, Tab } from '@/shared/model/tab-admin/store';
 import {
-    DragOverlay,
     useDroppable,
 } from '@dnd-kit/core';
 import {
@@ -62,22 +61,25 @@ export function TabBarWithDndKit({
 
     // Initialize and update scroll buttons on tab changes
     useEffect(() => {
-        checkScrollButtons();
-        // Use ResizeObserver to detect changes in container size
-        const resizeObserver = new ResizeObserver(() => {
+        // 안전하게 panel.tabs 접근
+        if (panel && panel.tabs) {
             checkScrollButtons();
-        });
+            // Use ResizeObserver to detect changes in container size
+            const resizeObserver = new ResizeObserver(() => {
+                checkScrollButtons();
+            });
 
-        if (tabsContainerRef.current) {
-            resizeObserver.observe(tabsContainerRef.current);
-        }
-
-        return () => {
             if (tabsContainerRef.current) {
-                resizeObserver.unobserve(tabsContainerRef.current);
+                resizeObserver.observe(tabsContainerRef.current);
             }
-        };
-    }, [panel.tabs]);
+
+            return () => {
+                if (tabsContainerRef.current) {
+                    resizeObserver.unobserve(tabsContainerRef.current);
+                }
+            };
+        }
+    }, [panel?.tabs]);
 
     // Scroll handlers
     const scrollLeft = () => {
@@ -93,6 +95,11 @@ export function TabBarWithDndKit({
             setTimeout(checkScrollButtons, 100);
         }
     };
+
+    // 탭이 없거나 panel이 유효하지 않으면 빈 탭바 렌더링
+    if (!panel || !panel.tabs) {
+        return <div className="flex items-center bg-gray-50 border-b border-gray-200 px-1 justify-between h-full"></div>;
+    }
 
     return (
         <div className="flex items-center bg-gray-50 border-b border-gray-200 px-1 justify-between h-full">

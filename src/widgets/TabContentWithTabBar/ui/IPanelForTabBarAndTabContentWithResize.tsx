@@ -31,12 +31,18 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
     dragHandleListeners,
     dragHandleAttributes,
 }) => {
-    const ActiveTabContent = panel.activeTabId
+    // 안전하게 panel.tabs 및 activeTabId 접근
+    const ActiveTabContent = panel && panel.tabs && panel.activeTabId
         ? panel.tabs.find((tab) => tab.id === panel.activeTabId)?.component
         : null;
 
     // 1분할일 때는 100% 너비 사용
     const isSinglePanel = screenCount === 1;
+
+    // panel이 없으면 빈 컨테이너 반환
+    if (!panel || !panel.tabs) {
+        return <div className="h-full bg-white rounded-lg"></div>;
+    }
 
     return (
         <Resizable

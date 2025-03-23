@@ -1,4 +1,3 @@
-// C:\Users\terec\boiler-plate\boiler-for-rdd\src\widgets\TabContentWithTabBar\index.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -19,7 +18,6 @@ import {
 import {
     SortableContext,
     sortableKeyboardCoordinates,
-    arrayMove,
 } from '@dnd-kit/sortable';
 import SortablePanel from './ui/sortablepanel';
 
@@ -40,6 +38,7 @@ export function TabContentWithTabBar() {
         isSplitScreen,
         moveTab,
         reorderPanels,
+        reorderTabs,
         updateSplitScreenCount,
         removePanel,
     } = useTabBarStore();
@@ -49,6 +48,7 @@ export function TabContentWithTabBar() {
     const [panelSizes, setPanelSizes] = useState<Record<string, { width?: string | number; height?: string | number }>>({});
     const [hoveredPanel, setHoveredPanel] = useState<string | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [activePanelId, setActivePanelId] = useState<string | null>(null);
 
     // 화면 분할 개수가 바뀌면 기존 사이즈 초기화 (항상 균등 분할)
     useEffect(() => {
@@ -75,26 +75,51 @@ export function TabContentWithTabBar() {
         } else if (tab && panelId) {
             setActiveDragTab(tab);
             setActivePanel(null);
+            setActivePanelId(panelId);
+            console.log(`Drag started: tab ${tab.id} from panel ${panelId}`);
         }
     };
 
     const handleDragOver = (event: DragOverEvent) => {
-        // 필요 시 구현
+        // 로그 추가
+        const { active, over } = event;
+        if (over && active.data.current?.type === 'tab') {
+            console.log(`Dragging over:`, {
+                activeId: active.id,
+                activeType: active.data.current.type,
+                activePanel: active.data.current.panelId,
+                overId: over.id,
+                overType: over.data.current?.type,
+                overPanel: over.data.current?.panelId
+            });
+        }
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
+        console.log("Drag end:", {
+            activeId: active.id,
+            activeData: active.data.current,
+            overId: over?.id,
+            overData: over?.data.current
+        });
 
         // Reset active states
-        setActiveId(null);
-        setActiveDragTab(null);
-        setActivePanel(null);
+        const resetStates = () => {
+            setActiveId(null);
+            setActiveDragTab(null);
+            setActivePanel(null);
+            setActivePanelId(null);
+        };
 
-        if (!over || !active.data.current) return;
+        if (!over || !active.data.current) {
+            resetStates();
+            return;
+        }
 
         const activeData = active.data.current;
 
-        // Handle panel reordering
+        // 패널 순서 변경 처리
         if (activeData.type === 'panel' && over.data.current?.type === 'panel') {
             const activeId = active.id as string;
             const overId = over.id as string;
@@ -102,26 +127,67 @@ export function TabContentWithTabBar() {
             if (activeId !== overId) {
                 reorderPanels(activeId, overId);
             }
+            resetStates();
             return;
         }
 
-        // Handle tab movement
-        const sourceTabId = active.id as string;
-        const sourcePanelId = activeData.panelId;
-        let targetPanelId = sourcePanelId;
+        // 탭 이동 또는 순서 변경 처리
+        if (activeData.type === 'tab') {
+            const sourceTabId = active.id as string;
+            const sourcePanelId = activeData.panelId;
 
-        if (over.data.current?.panelId) {
-            targetPanelId = over.data.current.panelId;
-        } else if (over.data.current?.type === 'panel-area') {
-            const match = (over.id as string).match(/droppable-(.+)/);
-            if (match && match[1]) {
-                targetPanelId = match[1];
+            // 같은 패널 내 탭 순서 변경 (두 탭 간)
+            if (over.data.current?.type === 'tab') {
+                const overTabId = over.id as string;
+                const overPanelId = over.data.current.panelId;
+
+                if (sourcePanelId === overPanelId && sourceTabId !== overTabId) {
+                    // 같은 패널 내 순서 변경
+                    const panelToReorder = panels.find(p => p.id === sourcePanelId);
+
+                    if (panelToReorder) {
+                        const tabIds = panelToReorder.tabs.map(tab => tab.id);
+                        const newOrder = [...tabIds];
+
+                        const activeIndex = newOrder.indexOf(sourceTabId);
+                        const overIndex = newOrder.indexOf(overTabId);
+
+                        if (activeIndex !== -1 && overIndex !== -1) {
+                            const [movedItem] = newOrder.splice(activeIndex, 1);
+                            newOrder.splice(overIndex, 0, movedItem);
+
+                            console.log(`Reordering tabs in panel ${sourcePanelId}:`, newOrder);
+                            reorderTabs(sourcePanelId, newOrder);
+                        }
+                    }
+                }
+                // 다른 패널로 이동
+                else if (sourcePanelId !== overPanelId) {
+                    console.log(`Moving tab ${sourceTabId} from panel ${sourcePanelId} to panel ${overPanelId}`);
+                    moveTab(sourceTabId, sourcePanelId, overPanelId);
+                }
+            }
+            // 패널 영역으로 이동
+            else if (over.data.current?.type === 'panel-area') {
+                const targetPanelId = over.data.current.panelId;
+
+                if (targetPanelId && sourcePanelId !== targetPanelId) {
+                    console.log(`Moving tab ${sourceTabId} from panel ${sourcePanelId} to panel ${targetPanelId}`);
+                    moveTab(sourceTabId, sourcePanelId, targetPanelId);
+                }
+            }
+            // droppable- ID로 시작하는 패널 영역으로 이동
+            else if (typeof over.id === 'string' && over.id.startsWith('droppable-')) {
+                const targetPanelId = over.id.substring(10); // 'droppable-' 이후 문자열
+
+                if (targetPanelId && sourcePanelId !== targetPanelId) {
+                    console.log(`Moving tab ${sourceTabId} from panel ${sourcePanelId} to panel ${targetPanelId}`);
+                    moveTab(sourceTabId, sourcePanelId, targetPanelId);
+                }
             }
         }
 
-        if (sourcePanelId !== targetPanelId) {
-            moveTab(sourceTabId, sourcePanelId, targetPanelId);
-        }
+        resetStates();
     };
 
     const handleRemovePanel = (panelId: string) => {
@@ -133,7 +199,8 @@ export function TabContentWithTabBar() {
         setPanelSizes(newSizes);
     };
 
-    if (panels.length === 0) {
+    // 패널이 없는 경우 처리
+    if (!panels || panels.length === 0) {
         return (
             <div className="h-full flex items-center justify-center text-gray-400">
                 <div className="text-center">
