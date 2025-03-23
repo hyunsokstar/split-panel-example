@@ -17,7 +17,6 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import IPanelForTabBarAndTabContentWithResize from './ui/IPanelForTabBarAndTabContentWithResize';
-import { TabBarWithDndKit } from './ui/TabBarWithDndKit';
 
 const dropAnimation = {
     ...defaultDropAnimation,
@@ -44,13 +43,14 @@ export function TabContentWithTabBar() {
     const [panelSizes, setPanelSizes] = useState<Record<string, { width?: string | number; height?: string | number }>>({});
     const [hoveredPanel, setHoveredPanel] = useState<string | null>(null);
 
+    // 화면 분할 개수가 바뀌면 기존 사이즈 초기화 (항상 균등 분할)
     useEffect(() => {
         setPanelSizes({});
     }, [screenCount]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
     const handleDragStart = (event: DragStartEvent) => {
@@ -103,31 +103,6 @@ export function TabContentWithTabBar() {
         setPanelSizes(newSizes);
     };
 
-    const renderPanel = (panel: PanelState) => {
-        const ActiveTabContent = panel.activeTabId
-            ? panel.tabs.find((tab) => tab.id === panel.activeTabId)?.component
-            : null;
-
-        return (
-            <div className="flex flex-col h-full border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                <TabBarWithDndKit
-                    panel={panel}
-                    onRemovePanel={() => handleRemovePanel(panel.id)}
-                    showRemoveButton={screenCount > 1}
-                />
-                <div className="flex-1 overflow-auto p-4" data-panel-id={panel.id}>
-                    {ActiveTabContent ? (
-                        <ActiveTabContent />
-                    ) : (
-                        <div className="h-full flex items-center justify-center text-gray-400">
-                            <p>콘텐츠를 선택해주세요</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    };
-
     if (panels.length === 0) {
         return (
             <div className="h-full flex items-center justify-center text-gray-400">
@@ -148,7 +123,16 @@ export function TabContentWithTabBar() {
             onDragEnd={handleDragEnd}
         >
             {!isSplitScreen ? (
-                renderPanel(panels[0])
+                <IPanelForTabBarAndTabContentWithResize
+                    panel={panels[0]}
+                    panelSize={panelSizes[panels[0].id] || {}}
+                    screenCount={screenCount}
+                    isLastPanel={true}
+                    isPanelHovered={hoveredPanel === panels[0].id}
+                    handleResizeStop={handleResizeStop}
+                    setHoveredPanel={setHoveredPanel}
+                    onRemovePanel={() => handleRemovePanel(panels[0].id)}
+                />
             ) : (
                 <div className="w-full h-full">
                     <div className="flex w-full h-full">
@@ -167,9 +151,8 @@ export function TabContentWithTabBar() {
                                     isPanelHovered={hoveredPanel === panel.id}
                                     handleResizeStop={handleResizeStop}
                                     setHoveredPanel={setHoveredPanel}
-                                >
-                                    {renderPanel(panel)}
-                                </IPanelForTabBarAndTabContentWithResize>
+                                    onRemovePanel={() => handleRemovePanel(panel.id)}
+                                />
                             );
                         })}
                     </div>
@@ -179,9 +162,7 @@ export function TabContentWithTabBar() {
             <DragOverlay dropAnimation={dropAnimation}>
                 {activeTab && (
                     <div className="flex items-center px-3 py-1.5 h-8 border border-blue-400 bg-blue-50 rounded-md min-w-[120px] shadow-lg">
-                        <span className="text-xs font-medium truncate flex-1">
-                            {activeTab.label}
-                        </span>
+                        <span className="text-xs font-medium truncate flex-1">{activeTab.label}</span>
                     </div>
                 )}
             </DragOverlay>
