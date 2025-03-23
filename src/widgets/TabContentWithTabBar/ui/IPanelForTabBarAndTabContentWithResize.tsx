@@ -56,8 +56,8 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
                 top: false,
                 bottom: false,
                 left: false,
-                // 1분할일 때는 리사이즈 비활성화
-                right: !isSinglePanel && !isLastPanel,
+                // 모든 패널이 리사이즈 가능하도록 수정 (마지막 패널 포함)
+                right: !isSinglePanel,
                 topLeft: false,
                 topRight: false,
                 bottomLeft: false,
@@ -70,7 +70,7 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
                 });
             }}
             handleClasses={{
-                right: `w-1 absolute top-0 bottom-0 right-0 transition-opacity duration-200 ${isPanelHovered && !isSinglePanel && !isLastPanel ? 'opacity-100' : 'opacity-0'
+                right: `w-1 absolute top-0 bottom-0 right-0 transition-opacity duration-200 ${isPanelHovered && !isSinglePanel ? 'opacity-100' : 'opacity-0'
                     }`,
             }}
             handleStyles={{
@@ -91,11 +91,11 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
             >
                 {/* 내부 패널 콘텐츠 */}
                 <div className="flex flex-col h-full border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                    <div className="flex h-10 bg-gray-50 border-b border-gray-200">
+                    <div className="flex h-10 bg-gray-50 border-b border-gray-200 overflow-hidden">
                         {/* Drag Handle for Panel Reordering */}
                         {screenCount > 1 && (
                             <div
-                                className="flex items-center justify-center w-8 cursor-grab hover:bg-gray-200 active:cursor-grabbing"
+                                className="flex items-center justify-center w-8 cursor-grab hover:bg-gray-200 active:cursor-grabbing flex-shrink-0"
                                 {...dragHandleListeners}
                                 {...dragHandleAttributes}
                             >
@@ -103,8 +103,8 @@ const IPanelForTabBarAndTabContentWithResize: React.FC<IPanelForTabBarAndTabCont
                             </div>
                         )}
 
-                        {/* Tab Bar */}
-                        <div className="flex-1">
+                        {/* Tab Bar - flex-1으로 나머지 공간 차지 */}
+                        <div className="flex-1 min-w-0 overflow-hidden">
                             <TabBarWithDndKit
                                 panel={panel}
                                 onRemovePanel={onRemovePanel}

@@ -81,28 +81,33 @@ export function TabContentWithTabBar() {
     };
 
     const handleDragOver = (event: DragOverEvent) => {
-        // 로그 추가
-        const { active, over } = event;
-        if (over && active.data.current?.type === 'tab') {
-            console.log(`Dragging over:`, {
-                activeId: active.id,
-                activeType: active.data.current.type,
-                activePanel: active.data.current.panelId,
-                overId: over.id,
-                overType: over.data.current?.type,
-                overPanel: over.data.current?.panelId
-            });
+        // 디버깅용 로그
+        if (process.env.NODE_ENV === 'development') {
+            const { active, over } = event;
+            if (over && active.data.current?.type === 'tab') {
+                console.log(`Dragging over:`, {
+                    activeId: active.id,
+                    activeType: active.data.current.type,
+                    activePanel: active.data.current.panelId,
+                    overId: over.id,
+                    overType: over.data.current?.type,
+                    overPanel: over.data.current?.panelId
+                });
+            }
         }
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
-        console.log("Drag end:", {
-            activeId: active.id,
-            activeData: active.data.current,
-            overId: over?.id,
-            overData: over?.data.current
-        });
+
+        if (process.env.NODE_ENV === 'development') {
+            console.log("Drag end:", {
+                activeId: active.id,
+                activeData: active.data.current,
+                overId: over?.id,
+                overData: over?.data.current
+            });
+        }
 
         // Reset active states
         const resetStates = () => {

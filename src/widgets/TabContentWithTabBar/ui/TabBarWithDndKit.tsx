@@ -55,7 +55,7 @@ export function TabBarWithDndKit({
         if (tabsContainerRef.current) {
             const { scrollLeft, scrollWidth, clientWidth } = tabsContainerRef.current;
             setShowLeftScroll(scrollLeft > 0);
-            setShowRightScroll(scrollLeft + clientWidth < scrollWidth);
+            setShowRightScroll(scrollLeft + clientWidth < scrollWidth - 10); // 약간의 여유를 두어 정확히 감지
         }
     };
 
@@ -63,7 +63,11 @@ export function TabBarWithDndKit({
     useEffect(() => {
         // 안전하게 panel.tabs 접근
         if (panel && panel.tabs) {
-            checkScrollButtons();
+            // 최초 렌더링 후 적절한 시점에 스크롤 버튼 상태 확인
+            setTimeout(() => {
+                checkScrollButtons();
+            }, 100);
+
             // Use ResizeObserver to detect changes in container size
             const resizeObserver = new ResizeObserver(() => {
                 checkScrollButtons();
@@ -73,10 +77,14 @@ export function TabBarWithDndKit({
                 resizeObserver.observe(tabsContainerRef.current);
             }
 
+            // 윈도우 리사이즈 이벤트도 처리
+            window.addEventListener('resize', checkScrollButtons);
+
             return () => {
                 if (tabsContainerRef.current) {
                     resizeObserver.unobserve(tabsContainerRef.current);
                 }
+                window.removeEventListener('resize', checkScrollButtons);
             };
         }
     }, [panel?.tabs]);
@@ -84,15 +92,15 @@ export function TabBarWithDndKit({
     // Scroll handlers
     const scrollLeft = () => {
         if (tabsContainerRef.current) {
-            tabsContainerRef.current.scrollLeft -= 100;
-            setTimeout(checkScrollButtons, 100);
+            tabsContainerRef.current.scrollLeft -= 150;
+            setTimeout(checkScrollButtons, 50);
         }
     };
 
     const scrollRight = () => {
         if (tabsContainerRef.current) {
-            tabsContainerRef.current.scrollLeft += 100;
-            setTimeout(checkScrollButtons, 100);
+            tabsContainerRef.current.scrollLeft += 150;
+            setTimeout(checkScrollButtons, 50);
         }
     };
 
@@ -103,11 +111,11 @@ export function TabBarWithDndKit({
 
     return (
         <div className="flex items-center bg-gray-50 border-b border-gray-200 px-1 justify-between h-full">
-            {/* Left scroll button */}
+            {/* Left scroll button - 항상 렌더링하되 필요에 따라 활성화/비활성화 */}
             <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
-                className={`h-6 w-6 rounded-full flex-shrink-0 mr-1 ${!showLeftScroll ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`h-6 w-6 rounded-full flex-shrink-0 mr-1 ${showLeftScroll ? 'opacity-100 hover:bg-gray-200' : 'opacity-30 cursor-not-allowed'}`}
                 onClick={scrollLeft}
                 disabled={!showLeftScroll}
             >
@@ -144,11 +152,11 @@ export function TabBarWithDndKit({
                 </PanelDropArea>
             </SortableContext>
 
-            {/* Right scroll button */}
+            {/* Right scroll button - 항상 렌더링하되 필요에 따라 활성화/비활성화 */}
             <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
-                className={`h-6 w-6 rounded-full flex-shrink-0 ml-1 ${!showRightScroll ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`h-6 w-6 rounded-full flex-shrink-0 ml-1 ${showRightScroll ? 'opacity-100 hover:bg-gray-200' : 'opacity-30 cursor-not-allowed'}`}
                 onClick={scrollRight}
                 disabled={!showRightScroll}
             >
@@ -160,7 +168,7 @@ export function TabBarWithDndKit({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="text-gray-400 hover:text-red-500 w-6 h-6 border border-dashed border-gray-300 rounded-md ml-2"
+                    className="text-gray-400 hover:text-red-500 w-6 h-6 border border-dashed border-gray-300 rounded-md ml-2 flex-shrink-0"
                     onClick={onRemovePanel}
                 >
                     <Minus size={14} />
