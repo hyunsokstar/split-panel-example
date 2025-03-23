@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -22,18 +21,23 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col`}
       >
         <Header />
-        <main className="flex-1 overflow-hidden bg-gray-50">
+        {/*
+          main을 w-full h-full, overflow-auto로 설정
+          => 전체 화면 폭을 차지하고, 내용이 넘치면 스크롤
+        */}
+        <main className="flex-1 w-full h-full overflow-auto bg-gray-50">
           <TabContentWithTabBar />
         </main>
+
         {/* children은 숨김 처리 또는 제거 가능 */}
         <div className="hidden">{children}</div>
       </body>
