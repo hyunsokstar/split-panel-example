@@ -5,6 +5,7 @@ import { Settings } from 'lucide-react';
 import { MainMenuItems } from './config/main-header-menu-items';
 import { useTabBarStore } from '@/shared/model/tab-admin/store';
 import ScreenSplitCountSelector from './ui/ScreenSplitCountSelector';
+import { ThemeToggle } from '@/shared/theme-toggle';
 
 export function Header() {
     const { addTab, panels } = useTabBarStore();
@@ -48,7 +49,7 @@ export function Header() {
     return (
         <>
             {/* 최상단 회사 이름 및 로그인 정보 설정 */}
-            <header className="bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-sm">
+            <header className="bg-gradient-to-r from-teal-600 to-teal-500 dark:from-gray-800 dark:to-gray-700 text-white shadow-sm">
                 <div className="flex h-6 items-center justify-between px-3">
                     <div className="flex items-center gap-1">
                         <h1 className="text-xs font-bold tracking-wide">NEXDPS</h1>
@@ -59,6 +60,10 @@ export function Header() {
                         </div>
                         <div className="flex items-center gap-2">
                             <ScreenSplitCountSelector />
+
+                            {/* 다크 모드 토글 버튼 */}
+                            <ThemeToggle />
+
                             <Link
                                 href="#"
                                 className="flex h-5 w-5 items-center justify-center rounded-sm border border-white/30 text-white hover:bg-white/10"
@@ -71,7 +76,7 @@ export function Header() {
             </header>
 
             {/* 메인 메뉴 */}
-            <div className="bg-white border-b">
+            <div className="bg-white dark:bg-gray-900 border-b dark:border-gray-800">
                 <div className="flex items-center overflow-x-auto px-3 py-1.5">
                     <div className="flex flex-1 justify-start space-x-3">
                         {MainMenuItems.map((item) => {
@@ -86,20 +91,26 @@ export function Header() {
                                 <button
                                     key={item.id}
                                     className={`group flex flex-col items-center justify-between h-14 px-2 py-1.5 border border-dashed ${isActive
-                                        ? 'border-teal-300 bg-teal-50'
-                                        : 'border-transparent hover:border-gray-300'
+                                        ? 'border-teal-300 bg-teal-50 dark:border-teal-700 dark:bg-teal-900/30'
+                                        : 'border-transparent hover:border-gray-300 dark:hover:border-gray-700'
                                         } rounded-sm transition-colors relative`}
                                     onClick={() => handleMenuClick(item)}
                                 >
-                                    <div className={`flex h-7 w-7 items-center justify-center rounded-sm ${isActive ? 'bg-teal-100' : 'bg-gray-50 group-hover:bg-gray-100'
+                                    <div className={`flex h-7 w-7 items-center justify-center rounded-sm ${isActive
+                                        ? 'bg-teal-100 dark:bg-teal-800/40'
+                                        : 'bg-gray-50 group-hover:bg-gray-100 dark:bg-gray-800 dark:group-hover:bg-gray-700'
                                         }`}>
                                         <Icon
                                             size={16}
-                                            className={`${isActive ? 'text-teal-600' : 'text-gray-600 group-hover:text-teal-500'
+                                            className={`${isActive
+                                                ? 'text-teal-600 dark:text-teal-400'
+                                                : 'text-gray-600 group-hover:text-teal-500 dark:text-gray-400 dark:group-hover:text-teal-400'
                                                 }`}
                                         />
                                     </div>
-                                    <span className={`text-xs mt-1 ${isActive ? 'text-teal-600 font-medium' : 'text-gray-600 group-hover:text-teal-500'
+                                    <span className={`text-xs mt-1 ${isActive
+                                        ? 'text-teal-600 dark:text-teal-400 font-medium'
+                                        : 'text-gray-600 group-hover:text-teal-500 dark:text-gray-400 dark:group-hover:text-teal-400'
                                         }`}>
                                         {item.name}
                                     </span>
