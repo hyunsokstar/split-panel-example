@@ -19,7 +19,7 @@ import {
     SortableContext,
     sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
-import SortablePanel from './ui/sortablepanel';
+import SortablePanel from './ui/SortablePanel';
 
 const dropAnimation = {
     ...defaultDropAnimation,
